@@ -1,19 +1,27 @@
+import os
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, MessageHandler, filters
 import json
-import os
 import random
+import tempfile
 
-# توکن ربات
-TOKEN = "8320821562:AAGtOOvNY-errWP8MSVPdIJOaVllsNXYFmU"
-ADMIN_ID = 8064413702
-DATA_FILE = "user_data.json"
+# دریافت توکن از متغیر محیطی - نسخه ایمن برای Render
+TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '8320821562:AAGtOOvNY-errWP8MSVPdIJOaVllsNXYFmU')
+ADMIN_ID = int(os.environ.get('ADMIN_ID', '8064413702'))
+
+# در Render از دیتابیس موقت استفاده کنید
+DATA_FILE = os.path.join(tempfile.gettempdir(), "user_data.json")
 
 # کانال‌های اجباری
 REQUIRED_CHANNELS = [
     {"name": "کانال MD روبلاکس", "link": "https://t.me/MDroblox", "id": "@MDroblox"},
     {"name": "Roblox Exploit IR", "link": "https://t.me/Robloxexploit_ir", "id": "@Robloxexploit_ir"}
 ]
+
+print("🟢 شروع ربات...")
+print(f"🔧 توکن: {'✅ موجود' if TOKEN else '❌ مفقود'}")
+print(f"🔧 فایل داده: {DATA_FILE}")
 
 # بارگذاری داده‌ها - نسخه اصلاح شده
 def load_data():
@@ -1228,40 +1236,55 @@ async def set_commands(application):
     ]
     await application.bot.set_my_commands(commands)
 
-# اصلی
+# اصلی - نسخه اصلاح شده برای Render
 def main():
-    # ایجاد اپلیکیشن
-    application = Application.builder().token(TOKEN).build()
+    try:
+        print("🔧 شروع main function...")
+        
+        # بررسی توکن
+        if not TOKEN:
+            print("❌ توکن ربات تنظیم نشده! لطفا TELEGRAM_BOT_TOKEN را تنظیم کنید.")
+            return
+        
+        # ایجاد اپلیکیشن
+        application = Application.builder().token(TOKEN).build()
+        print("✅ اپلیکیشن ساخته شد")
 
-    # تنظیم دستورات برای منوی پایین
-    application.post_init = set_commands
+        # تنظیم دستورات برای منوی پایین
+        application.post_init = set_commands
 
-    # افزودن هندلرها
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("bal", bal_command))
-    application.add_handler(CommandHandler("pay", pay_command))
-    application.add_handler(CommandHandler("bet", bet_command))
-    application.add_handler(CommandHandler("add", add_command))
-    application.add_handler(CommandHandler("rem", rem_command))
-    application.add_handler(CommandHandler("resetbal", resetbal_command))
-    application.add_handler(CommandHandler("alladd", alladd_command))
-    application.add_handler(CommandHandler("global", global_command))
-    application.add_handler(CallbackQueryHandler(button_handler))
-    application.add_handler(MessageHandler(filters.PHOTO, photo_handler))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
+        # افزودن هندلرها
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CommandHandler("bal", bal_command))
+        application.add_handler(CommandHandler("pay", pay_command))
+        application.add_handler(CommandHandler("bet", bet_command))
+        application.add_handler(CommandHandler("add", add_command))
+        application.add_handler(CommandHandler("rem", rem_command))
+        application.add_handler(CommandHandler("resetbal", resetbal_command))
+        application.add_handler(CommandHandler("alladd", alladd_command))
+        application.add_handler(CommandHandler("global", global_command))
+        application.add_handler(CallbackQueryHandler(button_handler))
+        application.add_handler(MessageHandler(filters.PHOTO, photo_handler))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
 
-    # اجرای ربات
-    print("🤖 ربات فعال شد...")
-    print("💰 سیستم اقتصادی فعال (هم در گروه و هم پیوی)")
-    print("🎲 شرط بندی فعال (هم در گروه و هم پیوی)")
-    print("👑 دستورات ادمین فعال")
-    print("📊 لیدربرد جهانی فعال")
-    print("🔢 پشتیبانی از فرمت‌های k, m, b")
-    print("🔒 سیستم عضویت اجباری فعال (هم در گروه و هم پیوی)")
-    print("📢 کانال‌های اجباری:")
-    for channel in REQUIRED_CHANNELS:
-        print(f"   • {channel['name']}: {channel['link']}")
-    application.run_polling()
+        # اجرای ربات
+        print("🤖 ربات فعال شد...")
+        print("💰 سیستم اقتصادی فعال (هم در گروه و هم پیوی)")
+        print("🎲 شرط بندی فعال (هم در گروه و هم پیوی)")
+        print("👑 دستورات ادمین فعال")
+        print("📊 لیدربرد جهانی فعال")
+        print("🔢 پشتیبانی از فرمت‌های k, m, b")
+        print("🔒 سیستم عضویت اجباری فعال (هم در گروه و هم پیوی)")
+        print("📢 کانال‌های اجباری:")
+        for channel in REQUIRED_CHANNELS:
+            print(f"   • {channel['name']}: {channel['link']}")
+        
+        application.run_polling()
+        
+    except Exception as e:
+        print(f"❌ خطا در اجرای ربات: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()
